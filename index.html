@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GVL Boys Zero Tracker</title>
+<meta name="description" content="Starters who scored zero or less, Smirnoff Ices logged, and balance owed for each GVL Boys team.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CONFIG lives in the <script> block at the bottom.
+   Colors are defined once here as tokens (light + dark).
+   ============================================================ */
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #f0f3f7;
+  --border: #e3e8ef;
+  --text: #0f1726;
+  --text-2: #5b6678;
+  --text-3: #8a94a6;
+  --accent: #1f6feb;
+  --owed-bg: #e6efff;
+  --owed-text: #1450b8;
+  --clear-bg: #eaf6ee;
+  --clear-text: #1d7a3f;
+  --warn-bg: #fff4e0;
+  --warn-text: #8a5300;
+  --warn-border: #f3d59b;
+  --shadow: 0 1px 2px rgba(15, 23, 38, .05), 0 4px 16px rgba(15, 23, 38, .05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1118;
+    --surface: #141b25;
+    --surface-2: #1b2430;
+    --border: #253041;
+    --text: #e8edf4;
+    --text-2: #a3aebf;
+    --text-3: #6f7b8e;
+    --accent: #5b9dff;
+    --owed-bg: #172a4a;
+    --owed-text: #8fbaff;
+    --clear-bg: #13301f;
+    --clear-text: #6fd394;
+    --warn-bg: #33260f;
+    --warn-text: #f2c26b;
+    --warn-border: #5a4418;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1118;
+  --surface: #141b25;
+  --surface-2: #1b2430;
+  --border: #253041;
+  --text: #e8edf4;
+  --text-2: #a3aebf;
+  --text-3: #6f7b8e;
+  --accent: #5b9dff;
+  --owed-bg: #172a4a;
+  --owed-text: #8fbaff;
+  --clear-bg: #13301f;
+  --clear-text: #6fd394;
+  --warn-bg: #33260f;
+  --warn-text: #f2c26b;
+  --warn-border: #5a4418;
+  --shadow: none;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  font-feature-settings: "tnum" 1, "cv11" 1;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 32px 16px 56px; }
+
+/* Header */
+.eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.eyebrow img { width: 24px; height: 24px; border-radius: 6px; }
+h1 { font-size: 30px; font-weight: 700; letter-spacing: -.02em; margin: 8px 0 4px; }
+.sub { color: var(--text-2); margin: 0; }
+.sub strong { color: var(--text); font-weight: 600; }
+
+/* Summary tiles */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 24px 0 16px; }
+.tile {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px; box-shadow: var(--shadow);
+}
+.tile .label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.tile .value { font-size: 26px; font-weight: 700; letter-spacing: -.02em; margin-top: 2px; }
+
+/* Notices */
+.notice {
+  background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-border);
+  border-radius: 10px; padding: 10px 14px; font-size: 13.5px; margin-bottom: 12px;
+}
+.notice ul { margin: 4px 0 0; padding-left: 18px; }
+
+/* Standings card */
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow); overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+col.c-num { width: 76px; }
+col.c-owed { width: 96px; }
+thead th {
+  font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-3); text-align: right; padding: 12px 16px; background: var(--surface-2);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+thead th.team-col { text-align: left; }
+tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); text-align: right; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+td.num { font-weight: 500; color: var(--text-2); }
+td.team { text-align: left; }
+.team-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.rank { width: 18px; flex: none; font-size: 13px; color: var(--text-3); font-weight: 600; text-align: right; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex: none; object-fit: cover;
+  background: var(--surface-2); display: grid; place-items: center;
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  position: relative; overflow: hidden;
+}
+.avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.names { min-width: 0; }
+.team-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.owner { font-size: 12.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pill {
+  display: inline-block; min-width: 40px; text-align: center; padding: 4px 10px; border-radius: 999px;
+  font-weight: 700; font-size: 15px;
+}
+.pill.owed { background: var(--owed-bg); color: var(--owed-text); }
+.pill.clear { background: var(--clear-bg); color: var(--clear-text); }
+.pill.over { background: var(--warn-bg); color: var(--warn-text); }
+.flag { display: block; font-size: 11px; color: var(--warn-text); margin-top: 3px; white-space: nowrap; }
+
+/* Ice log */
+details.log { margin-top: 16px; }
+details.log summary {
+  cursor: pointer; list-style: none; font-weight: 600; font-size: 14px; color: var(--text-2);
+  padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+}
+details.log summary::-webkit-details-marker { display: none; }
+details.log summary::after { content: "Show"; float: right; font-weight: 500; color: var(--accent); }
+details.log[open] summary::after { content: "Hide"; }
+details.log[open] summary { border-radius: 12px 12px 0 0; border-bottom: 0; }
+.log-body { background: var(--surface); border: 1px solid var(--border); border-radius: 0 0 12px 12px; }
+.log-row { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--border); font-size: 13.5px; align-items: center; }
+.log-row:first-child { border-top: 0; }
+.log-row > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log-row .note { color: var(--text-3); max-width: 160px; text-align: right; }
+.log-row .date { color: var(--text-3); }
+.log-row a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.log-row a:hover { text-decoration: underline; }
+.log-empty { padding: 14px 16px; color: var(--text-3); font-size: 13.5px; }
+
+/* Rules + footer */
+.rules { margin-top: 28px; font-size: 13px; color: var(--text-3); }
+.rules p { margin: 0 0 6px; }
+.error { text-align: center; padding: 40px 16px; color: var(--text-2); }
+.error button {
+  margin-top: 12px; font: inherit; font-weight: 600; color: #fff; background: var(--accent);
+  border: 0; border-radius: 8px; padding: 8px 16px; cursor: pointer;
+}
+
+/* Loading skeleton */
+.skel { height: 14px; border-radius: 6px; background: var(--surface-2); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .5; } }
+
+/* Phone */
+@media (max-width: 520px) {
+  .wrap { padding-top: 24px; }
+  h1 { font-size: 25px; }
+  .tiles { gap: 8px; }
+  .tile { padding: 12px; }
+  .tile .value { font-size: 22px; }
+  thead th, tbody td { padding-left: 10px; padding-right: 10px; }
+  col.c-num { width: 46px; }
+  col.c-owed { width: 66px; }
+  thead th { font-size: 10.5px; letter-spacing: .04em; }
+  .team-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.25; }
+  .pill { min-width: 34px; padding: 3px 8px; }
+  .avatar { width: 30px; height: 30px; font-size: 12px; }
+  .team-cell { gap: 9px; }
+  .rank { display: none; }
+  .log-row { grid-template-columns: 52px 1fr auto; gap: 8px; }
+  .log-row .note { max-width: 110px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="eyebrow">GVL Boys</div>
+    <h1>Zero Tracker</h1>
+    <p class="sub" id="sub">Loading from Sleeper…</p>
+  </header>
+
+  <section class="tiles" aria-label="League totals">
+    <div class="tile"><div class="label">Zeros</div><div class="value" id="t-zeros">–</div></div>
+    <div class="tile"><div class="label">Ices logged</div><div class="value" id="t-ices">–</div></div>
+    <div class="tile"><div class="label">Ices owed</div><div class="value" id="t-owed">–</div></div>
+  </section>
+
+  <div id="notices"></div>
+
+  <section class="card" aria-label="Standings">
+    <table>
+      <colgroup><col><col class="c-num"><col class="c-num"><col class="c-owed"></colgroup>
+      <thead>
+        <tr>
+          <th class="team-col" scope="col">Team</th>
+          <th scope="col">Zeros</th>
+          <th scope="col">Ices</th>
+          <th scope="col">Owed</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+
+  <details class="log" id="log">
+    <summary id="log-summary">Ice log</summary>
+    <div class="log-body" id="log-body"></div>
+  </details>
+
+  <footer class="rules">
+    <p>A zero is any starter who finishes a week at 0.0 or below, including empty lineup slots. Bench players don't count.</p>
+    <p>A week counts after Monday night is final. Every week from 1 to 17 counts, playoffs included.</p>
+    <p>Each Smirnoff Ice logged by the commissioner takes one off your balance. You can't bank ices ahead of time.</p>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  LEAGUE_ID: "1336783385590251520",
+  API: "https://api.sleeper.app/v1",
+  FIRST_WEEK: 1,
+  LAST_WEEK: 17,              // championship week; week 18 has no league games
+  ICE_LOG: "ices.csv",        // edited by the commissioner in GitHub
+  FINAL_HOUR_UTC: 11          // Tuesday 11:00 UTC = 7am ET (EDT) / 6am ET (EST)
+};
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+async function getJSON(path) {
+  const res = await fetch(CONFIG.API + path, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Sleeper returned ${res.status} for ${path}`);
+  return res.json();
+}
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const shortDate = s => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s).trim());
+  if (!m) return s;
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+const key = s =>String(s ?? "").trim().toLowerCase();
+
+/* Weeks that are final: the lower of Sleeper's current week minus one
+   and the number of Tuesday mornings that have passed since week 1. */
+function completedWeeks(state, leagueSeason, now = new Date()) {
+  const season = Number(leagueSeason);
+  const stateSeason = Number(state.season);
+  if (stateSeason > season) return CONFIG.LAST_WEEK;
+  if (stateSeason < season) return 0;
+  if (state.season_type === "pre") return 0;
+  if (state.season_type === "post") return CONFIG.LAST_WEEK;
+  if (state.season_type === "off") {
+    const start = state.season_start_date ? new Date(state.season_start_date + "T00:00:00Z") : null;
+    return start && now > start ? CONFIG.LAST_WEEK : 0;
+  }
+
+  let done = Math.max(0, Number(state.week) - 1);
+
+  if (state.season_start_date) {
+    // Week 1 Monday = first Monday after the season start date
+    const start = new Date(state.season_start_date + "T00:00:00Z");
+    const firstMonday = new Date(start);
+    do { firstMonday.setUTCDate(firstMonday.getUTCDate() + 1); } while (firstMonday.getUTCDay() !== 1);
+    let byTime = 0;
+    for (let w = 1; w <= CONFIG.LAST_WEEK; w++) {
+      const final = new Date(firstMonday);
+      final.setUTCDate(final.getUTCDate() + 7 * (w - 1) + 1);
+      final.setUTCHours(CONFIG.FINAL_HOUR_UTC, 0, 0, 0);
+      if (now >= final) byTime = w; else break;
+    }
+    done = Math.min(done, byTime);
+  }
+  return Math.min(done, CONFIG.LAST_WEEK);
+}
+
+/* Count starters at or below 0.0. Empty slots are "0" with 0 points. */
+function countZeros(entry) {
+  const starters = entry.starters || [];
+  const pts = entry.starters_points || [];
+  const byPlayer = entry.players_points || {};
+  let n = 0;
+  starters.forEach((id, i) => {
+    let p = pts[i];
+    if (p === undefined || p === null) p = (id && id !== "0") ? (byPlayer[id] ?? 0) : 0;
+    if (Number(p) <= 0) n++;
+  });
+  return n;
+}
+
+/* Minimal CSV parser: handles quoted fields, skips blank and # lines. */
+function parseCSV(text) {
+  const rows = [];
+  for (const raw of text.replace(/\r/g, "").split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const cells = []; let cur = ""; let q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) {
+        if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+        else if (c === '"') q = false;
+        else cur += c;
+      } else if (c === '"') q = true;
+      else if (c === ",") { cells.push(cur.trim()); cur = ""; }
+      else cur += c;
+    }
+    cells.push(cur.trim());
+    rows.push(cells);
+  }
+  if (!rows.length) return [];
+  const head = rows.shift().map(key);
+  return rows.map(r => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ""])));
+}
+
+async function loadIceLog() {
+  try {
+    const res = await fetch(`${CONFIG.ICE_LOG}?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return { entries: [], missing: true };
+    return { entries: parseCSV(await res.text()), missing: false };
+  } catch { return { entries: [], missing: true }; }
+}
+
+function avatarHTML(team) {
+  const img = team.avatar ? `<img src="${esc(team.avatar)}" alt="" loading="lazy" onerror="this.remove()">` : "";
+  return `<div class="avatar">${esc(team.initials)}${img}</div>`;
+}
+
+/* ============================================================
+   Main
+   ============================================================ */
+async function main() {
+  renderSkeleton();
+  document.getElementById("notices").innerHTML = "";
+  try {
+    const L = CONFIG.LEAGUE_ID;
+    const [state, league, users, rosters, iceLog] = await Promise.all([
+      getJSON("/state/nfl"),
+      getJSON(`/league/${L}`),
+      getJSON(`/league/${L}/users`),
+      getJSON(`/league/${L}/rosters`),
+      loadIceLog()
+    ]);
+
+    const through = completedWeeks(state, league.season);
+    const weeks = [];
+    for (let w = CONFIG.FIRST_WEEK; w <= through; w++) weeks.push(w);
+    const matchups = await Promise.all(weeks.map(w => getJSON(`/league/${L}/matchups/${w}`)));
+
+    // Teams keyed by roster_id
+    const userById = Object.fromEntries(users.map(u => [u.user_id, u]));
+    const teams = {};
+    for (const r of rosters) {
+      const u = userById[r.owner_id] || {};
+      const owner = u.display_name || `Team ${r.roster_id}`;
+      const name = (u.metadata && u.metadata.team_name) || owner;
+      const avatar = (u.metadata && u.metadata.avatar) || (u.avatar ? `https://sleepercdn.com/avatars/thumbs/${u.avatar}` : "");
+      teams[r.roster_id] = {
+        rosterId: r.roster_id, owner, name, avatar,
+        initials: name.replace(/[^A-Za-z0-9 ]/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0].toUpperCase()).join("") || "?",
+        zeros: 0, ices: 0
+      };
+    }
+
+    // Zeros
+    for (const week of matchups) {
+      for (const entry of week || []) {
+        if (teams[entry.roster_id]) teams[entry.roster_id].zeros += countZeros(entry);
+      }
+    }
+
+    // Ices: match by Sleeper username, falling back to team name
+    const lookup = {};
+    for (const t of Object.values(teams)) { lookup[key(t.owner)] = t; lookup[key(t.name)] ??= t; }
+    const unmatched = [];
+    const logRows = [];
+    for (const e of iceLog.entries) {
+      const count = Number(e.count);
+      const t = lookup[key(e.owner)];
+      if (!t || !Number.isFinite(count) || count <= 0) { unmatched.push(e); continue; }
+      t.ices += count;
+      logRows.push({ ...e, count, team: t });
+    }
+
+    render(league, through, Object.values(teams), logRows, unmatched, iceLog.missing);
+  } catch (err) {
+    console.error(err);
+    document.getElementById("sub").textContent = "Couldn't load league data.";
+    document.getElementById("rows").innerHTML =
+      `<tr><td colspan="4"><div class="error">Sleeper didn't respond. Check your connection and try again.<br><button onclick="main()">Retry</button></div></td></tr>`;
+  }
+}
+
+function renderSkeleton() {
+  document.getElementById("rows").innerHTML = Array.from({ length: 12 }, () =>
+    `<tr><td class="team"><div class="team-cell"><div class="avatar"></div><div class="skel" style="width:140px"></div></div></td>
+     <td class="num"><div class="skel" style="width:20px;margin-left:auto"></div></td>
+     <td class="num"><div class="skel" style="width:20px;margin-left:auto"></div></td>
+     <td class="num"><div class="skel" style="width:40px;margin-left:auto"></div></td></tr>`).join("");
+}
+
+function render(league, through, teams, logRows, unmatched, logMissing) {
+  // Header
+  const eb = document.getElementById("eyebrow");
+  eb.innerHTML = (league.avatar ? `<img src="https://sleepercdn.com/avatars/thumbs/${esc(league.avatar)}" alt="">` : "") +
+    `<span>${esc(league.name || "GVL Boys")} · ${esc(league.season)} season</span>`;
+  const loaded = new Date().toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  document.getElementById("sub").innerHTML = through > 0
+    ? `Through <strong>Week ${through}</strong> · Live from Sleeper, loaded ${esc(loaded)}`
+    : `No weeks are final yet. Week 1 counts after Monday night.`;
+
+  // Balances
+  for (const t of teams) t.owed = t.zeros - t.ices;
+  teams.sort((a, b) => b.owed - a.owed || b.zeros - a.zeros || a.name.localeCompare(b.name));
+
+  const sum = f => teams.reduce((s, t) => s + f(t), 0);
+  document.getElementById("t-zeros").textContent = sum(t => t.zeros);
+  document.getElementById("t-ices").textContent = sum(t => t.ices);
+  document.getElementById("t-owed").textContent = sum(t => Math.max(0, t.owed));
+
+  // Notices
+  const notes = [];
+  const over = teams.filter(t => t.owed < 0);
+  if (over.length) notes.push(`Ices logged exceed zeros for ${over.map(t => esc(t.name)).join(", ")}. Ices can't be banked ahead, so check the log.`);
+  if (unmatched.length) notes.push(`Log entries that don't match a team or have an invalid count:<ul>${
+    unmatched.map(e => `<li>${esc(e.date)} · "${esc(e.owner)}" · count ${esc(e.count)}</li>`).join("")}</ul>`);
+  if (logMissing) notes.push(`The ice log file (${esc(CONFIG.ICE_LOG)}) couldn't be read, so ices show as 0.`);
+  document.getElementById("notices").innerHTML = notes.map(n => `<div class="notice">${n}</div>`).join("");
+
+  // Rows
+  document.getElementById("rows").innerHTML = teams.map((t, i) => {
+    let pill;
+    if (t.owed > 0) pill = `<span class="pill owed">${t.owed}</span>`;
+    else if (t.owed === 0) pill = `<span class="pill clear">0</span>`;
+    else pill = `<span class="pill over">0</span><span class="flag">Over by ${-t.owed}</span>`;
+    return `<tr>
+      <td class="team"><div class="team-cell">
+        <span class="rank">${i + 1}</span>${avatarHTML(t)}
+        <div class="names"><div class="team-name">${esc(t.name)}</div><div class="owner">@${esc(t.owner)}</div></div>
+      </div></td>
+      <td class="num">${t.zeros}</td>
+      <td class="num">${t.ices}</td>
+      <td>${pill}</td>
+    </tr>`;
+  }).join("");
+
+  // Ice log, newest first
+  logRows.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  document.getElementById("log-summary").textContent = `Ice log (${logRows.length} ${logRows.length === 1 ? "entry" : "entries"})`;
+  document.getElementById("log-body").innerHTML = logRows.length
+    ? logRows.map(r => `<div class="log-row">
+        <span class="date">${esc(shortDate(r.date))}</span>
+        <span>${esc(r.team.name)} · ${r.count} ${r.count === 1 ? "ice" : "ices"}</span>
+        ${/^https?:\/\//i.test(r.proof) ? `<a href="${esc(r.proof)}" target="_blank" rel="noopener">Proof</a>` : `<span class="note" title="${esc(r.proof)}">${esc(r.proof) || "No proof"}</span>`}
+      </div>`).join("")
+    : `<div class="log-empty">No ices logged yet.</div>`;
+}
+
+main();
+</script>
+</body>
+</html>

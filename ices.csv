@@ -1,0 +1,3 @@
+date,owner,count,proof
+# One line per ice session. owner = the drinker's Sleeper username. Lines starting with # are ignored.
+# Example: 2026-09-27,PhilBrickma69,2,https://youtu.be/your-video-link
